@@ -2,7 +2,7 @@ import ollama from "./client.js";
 import { getContext } from "./retriever.js";
 import { printResponse } from "./helper.js";
 import { buildMessage } from "./augmenter.js";
-
+import { MODEL_NAME } from "./config.js";
 
 async function getResponse(query) {
 
@@ -14,7 +14,7 @@ async function getResponse(query) {
 
   // 3. call ollama chat to get the response in streams. (Generation)
   const stream = await ollama.chat({
-    model: "gpt-oss:120b-cloud",
+    model: MODEL_NAME,
     messages: message,
     stream: true
   });

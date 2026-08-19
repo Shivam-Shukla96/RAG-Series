@@ -27,7 +27,7 @@ async function printResponse(response) {
     }
 }
 
-export { printResponse, thinkingAndAnswerStream }
+export { printResponse }
 
 
 
