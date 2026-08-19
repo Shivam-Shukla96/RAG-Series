@@ -2,6 +2,13 @@
 
 A lightweight Retrieval-Augmented Generation (RAG) implementation in Node.js using Ollama and web search retrieval.
 
+Phase 1 — Naive RAG: Connect Retrieval to Generation
+
+Goal: Retrieve web results → inject them as context → stream the model's answer. No database, no embeddings — just clean RAG fundamentals.
+
+1. The RAG Pipeline
+RAG = Retrieve → Augment → Generate. Instead of the model relying only on its training data, you first fetch relevant documents and stuff them into the prompt as context.
+
 ## 🚀 Overview
 
 This project demonstrates the core fundamentals of RAG:
