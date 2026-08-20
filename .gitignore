@@ -145,3 +145,9 @@ vite.config.ts.timestamp-*
 
 # Roadmaps
 *Roadmap*
+
+# ChromaDB & Vector Store Data
+chroma-data/
+chroma/
+*.sqlite3
+*.duckdb

@@ -1,0 +1,16 @@
+Artificial intelligence (AI) is a branch of computer science focused on building systems and software capable of performing tasks that normally require human intelligence, such as learning, reasoning, problem-solving, and understanding language. [1, 2, 3]  
+How AI Works 
+
+• Data processing: Systems ingest large amounts of data to find hidden rules or trends. 
+• Pattern recognition: Algorithms identify repetitive structures in text, images, or numbers. 
+• Automation: Programs execute routine or complex actions without continuous human supervision. [1, 4, 5, 6, 7]  
+
+Common Uses of AI 
+
+• Virtual assistants: Software like Siri and Alexa handle daily voice commands. 
+• Generative tools: Programs create text, code, images, and audio based on user prompts. 
+• Navigation: Maps and self-driving features analyze real-time road data to route cars. [2, 4, 5, 8, 9, 10]  
+
+If you'd like to narrow this down, let me know if you want to explore:Machine learning and how algorithms train on dataGenerative AI tools and how they create contentReal-world applications in a specific industry 
+AI responses may include mistakes.
+
