@@ -13,7 +13,7 @@ What embedding model does your code use, and why does the choice of embedding mo
 
 * **Semantic Understanding vs. Exact String Matching**:
   * Keyword search (CTRL+F / lexical search) only matches literal words and characters. If a user asks *"What is a neural network?"*, keyword search will miss chunks in `sample.txt` that discuss *"deep learning architectures"*, *"perceptrons"*, or *"brain-inspired AI models"* unless those exact words appear.
-  * Vector similarity search (via `embed(query)` in [embedder.js](file:///c:/Users/himanshu%20shukla/Desktop/my-projects/ollama-js/embedder.js) and ChromaDB in [vectorstore.js](file:///c:/Users/himanshu%20shukla/Desktop/my-projects/ollama-js/vectorstore.js)) projects concepts into a high-dimensional mathematical space (cosine / euclidean distance). It captures the **meaning and intent** behind queries, handling synonyms, typos, paraphrasing, and cross-lingual concepts.
+  * Vector similarity search (via `embed(query)` in [embedder.js] and ChromaDB in [vectorstore.js] projects concepts into a high-dimensional mathematical space (cosine / euclidean distance). It captures the **meaning and intent** behind queries, handling synonyms, typos, paraphrasing, and cross-lingual concepts.
 
 ---
 
@@ -21,13 +21,13 @@ What embedding model does your code use, and why does the choice of embedding mo
 
 * **It is a fundamental Feature!**
   * Similar embeddings mean the two chunks discuss **semantically related topics**, even if they come from separate source files (e.g., a documentation file vs. a web search result).
-  * In your project, when [retriever.js](file:///c:/Users/himanshu%20shukla/Desktop/my-projects/ollama-js/retriever.js) queries ChromaDB, vector similarity groups all chunks addressing the user's question together, regardless of which document or chunk index they originated from. This allows the LLM in [augmenter.js](file:///c:/Users/himanshu%20shukla/Desktop/my-projects/ollama-js/augmenter.js) to synthesize information across multiple sources.
+  * In your project, when [retriever.js] queries ChromaDB, vector similarity groups all chunks addressing the user's question together, regardless of which document or chunk index they originated from. This allows the LLM in [augmenter.js] to synthesize information across multiple sources.
 
 ---
 
 ### **Q3: What happens if your chunk size is too small? Too large?**
 
-In [ingest.js](file:///c:/Users/himanshu%20shukla/Desktop/my-projects/ollama-js/ingest.js), you chunk documents (`chunkSize = 100` characters):
+In [ingest.js], you chunk documents (`chunkSize = 100` characters):
 
 * **If Chunk Size is Too Small (e.g., 20–50 chars)**:
   * **Loss of Semantic Context**: Chunks get fragmented mid-sentence (e.g., losing subject-verb context or qualifiers).

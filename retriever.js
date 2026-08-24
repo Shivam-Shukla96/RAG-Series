@@ -66,7 +66,7 @@ async function getContext(query) {
                 context += src.snippet ? `Snippet : ${src?.snippet}\n\n` : "";
             }
         }
-    }   
+    }
     return context;
 }
 
