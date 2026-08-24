@@ -11,6 +11,7 @@ async function getResponse(query) {
 
   // 2. building final msg to be sent to the LLM (Augmentation)
   const message = buildMessage(query, context)
+  
 
   // 3. call ollama chat to get the response in streams. (Generation)
   const stream = await ollama.chat({
