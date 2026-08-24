@@ -1,39 +1,60 @@
-# RAG with Ollama (JavaScript) — Phase 2
+# RAG with Ollama (JavaScript) — Phase 3
 
-A lightweight Retrieval-Augmented Generation (RAG) implementation in Node.js using **Ollama**, **ChromaDB**, and **Hybrid Retrieval** (Local Vector Database + Live Web Search).
+A production-grade Retrieval-Augmented Generation (RAG) implementation in Node.js featuring **Semantic Chunking**, **Dense Vector Search (ChromaDB)**, **Sparse Keyword Search (BM25 / TF-IDF)**, **Reciprocal Rank Fusion (RRF)**, **Reranking**, and **Live Web Search Fallback** with **Ollama**.
 
 ---
 
-## 🎯 Phase 2 — Local Vector Store + Embeddings
+## 🎯 Phase 3 — Advanced Hybrid Search, Semantic Chunking & Rank Fusion
 
-In Phase 1, retrieval was strictly web-based. **Phase 2 introduces semantic vector search**:
-- Text chunking & document ingestion from local files.
-- Local high-dimensional embeddings using `nomic-embed-text`.
-- Vector similarity search using **ChromaDB**.
-- Hybrid context merging (local documents + web search fallback).
+Phase 3 upgrades the RAG pipeline with state-of-the-art information retrieval techniques to solve vocabulary mismatch and score calibration problems:
+
+1. **Semantic Chunking (`chunker.js`)**: Splits text at natural topic shift boundaries using consecutive sentence embedding cosine similarities rather than arbitrary fixed token counts.
+2. **Hybrid Retrieval (Dense + Sparse)**:
+   - **Dense Retrieval**: Semantic similarity matching in vector space via ChromaDB and `nomic-embed-text`.
+   - **Sparse Retrieval**: Exact keyword and acronym matching via TF-IDF / BM25 (`natural` library).
+3. **Reciprocal Rank Fusion (RRF)**: Merges dense and sparse ranked lists into a single calibrated ranking using position-based harmonic scoring ($k=60$).
+4. **Reranking (`reranker.js`)**: Two-stage retrieval pattern (Retrieve Top-K candidates $\rightarrow$ Rerank for high-precision context selection).
+5. **Parallel Live Web Search**: Fallback and supplementary web context powered by Cloud Ollama.
+
+---
+
+## 🏛️ Pipeline Architecture
+
+### 1. Ingestion Phase (Semantic Chunking)
+![Ingestion Phase Diagram](assets/ingestion-phase.png)
+
+### 2. Hybrid Retrieval, Rank Fusion & Generation Phase
+![Retrieval and Generation Phase Diagram](assets/retrieval-generation-phase.png)
 
 ```
-                      ┌────────────────────────┐
-                      │  User Query / Prompt   │
-                      └───────────┬────────────┘
-                                  │
-                  ┌───────────────┴───────────────┐
-                  ▼                               ▼
-       ┌────────────────────┐          ┌────────────────────┐
-       │ Local Vector Search│          │  Live Web Search   │
-       │    (ChromaDB)      │          │   (Cloud Ollama)   │
-       └──────────┬─────────┘          └──────────┬─────────┘
-                  │                               │
-                  └───────────────┬───────────────┘
-                                  ▼
-                     ┌────────────────────────┐
-                     │ Augmented Context Prep │
-                     └────────────┬───────────┘
-                                  ▼
-                     ┌────────────────────────┐
-                     │ LLM Stream Generation  │
-                     │  (Thinking + Answer)   │
-                     └────────────────────────┘
+                              ┌────────────────────────┐
+                              │  User Query / Prompt   │
+                              └───────────┬────────────┘
+                                          │
+                  ┌───────────────────────┼───────────────────────┐
+                  ▼                       ▼                       ▼
+       ┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+       │ Dense Vector Search│  │ Sparse BM25 Search │  │  Live Web Search   │
+       │    (ChromaDB)      │  │  (TF-IDF / natural)│  │   (Cloud Ollama)   │
+       └──────────┬─────────┘  └──────────┬─────────┘  └──────────┬─────────┘
+                  │                       │                       │
+                  └───────────┬───────────┘                       │
+                              ▼                                   │
+                 ┌─────────────────────────┐                      │
+                 │ Reciprocal Rank Fusion  │                      │
+                 │      (RRF with k=60)    │                      │
+                 └────────────┬────────────┘                      │
+                              │                                   │
+                              └─────────────────┬─────────────────┘
+                                                ▼
+                                   ┌────────────────────────┐
+                                   │ Augmented Context Prep │
+                                   └────────────┬───────────┘
+                                                ▼
+                                   ┌────────────────────────┐
+                                   │ LLM Stream Generation  │
+                                   │  (Thinking + Answer)   │
+                                   └────────────────────────┘
 ```
 
 ---
@@ -41,20 +62,26 @@ In Phase 1, retrieval was strictly web-based. **Phase 2 introduces semantic vect
 ## 📁 Project Structure
 
 ```
+├── assets/
+│   ├── ingestion-phase.png            # Ingestion & semantic chunking architecture
+│   └── retrieval-generation-phase.png # Hybrid retrieval & RRF architecture
 ├── docs/
-│   └── sample.txt       # Source text document for vector store ingestion
-├── client.js            # Ollama clients (Local Ollama & Cloud Ollama)
-├── config.js            # Environment variable configuration
-├── embedder.js          # Text embedding generator using local Ollama
-├── vectorstore.js       # ChromaDB client, collection manager, and query helper
-├── ingest.js            # Document chunker and vector store ingestion script
-├── retriever.js         # Hybrid retriever (Vector Search + Web Search via Promise.allSettled)
-├── augmenter.js         # Prompt builder combining context & user query
-├── helper.js            # Stream handler separating reasoning/thinking & final answer
-├── index.js             # Main application entry point running the RAG pipeline
-├── Quiz.md              # Phase 2 interview & concept questions
-├── RAG_LEARNING_ROADMAP.md # Detailed learning roadmap & progression guide
-└── .env                 # API credentials & host configuration
+│   └── sample.txt                     # Source document for ingestion
+├── client.js                          # Ollama clients (Local & Cloud instances)
+├── config.js                          # Environment variable configuration
+├── embedder.js                        # Vector embedding generator (nomic-embed-text)
+├── chunker.js                         # Semantic chunker & cosine similarity calculator
+├── vectorstore.js                     # ChromaDB client, collection manager & queries
+├── ingest.js                          # Document ingestion pipeline
+├── retriever.js                       # Hybrid retriever (Vector + BM25 + RRF + Web search)
+├── reranker.js                        # Cross-encoder reranking utilities
+├── augmenter.js                       # Prompt builder combining context & query
+├── helper.js                          # Stream handler for reasoning (<think>) & output
+├── index.js                           # Main application entry point
+├── concpets.md                        # Theoretical guide (TF-IDF, BM25, Cosine Sim, RRF)
+├── Quiz.md                            # Phase 3 interview & concept questions
+├── RAG_LEARNING_ROADMAP.md            # Comprehensive learning progression guide
+└── .env                               # Environment variables & API keys
 ```
 
 ---
@@ -86,12 +113,15 @@ MODEL_NAME_LOCAL=qwen2.5-coder:3b
 MODEL_NAME_EMBED=nomic-embed-text
 ```
 
-### 3. Pull the Embedding Model in Ollama
-Make sure local Ollama is running, then pull the embedding model:
+### 3. Pull Required Models in Ollama
+Make sure Ollama is running, then pull the embedding model and your local LLM:
 ```bash
+# Pull embedding model
 ollama pull nomic-embed-text
+
+# Pull local language model
+ollama pull qwen2.5-coder:3b
 ```
-*(Optional: also pull your local LLM, e.g. `ollama pull qwen2.5-coder:3b`)*
 
 ### 4. Start ChromaDB (Vector Store)
 Run ChromaDB using Docker:
@@ -101,7 +131,7 @@ Run ChromaDB using Docker:
 docker run -p 8000:8000 chromadb/chroma
 ```
 
-**Persistent run (saves embeddings to disk):**
+**Persistent run (persists embeddings to disk):**
 ```bash
 # Windows PowerShell
 docker run -p 8000:8000 -v ${PWD}/chroma-data:/chroma/chroma chromadb/chroma
@@ -115,14 +145,14 @@ docker run -p 8000:8000 -v "%cd%/chroma-data:/chroma/chroma" chromadb/chroma
 ## ▶️ Running the Application
 
 ### Step 1: Ingest Documents into ChromaDB
-Read `docs/sample.txt`, create chunks, generate embeddings, and store them in the `my-docs` ChromaDB collection:
+Reads `docs/sample.txt`, chunks the content, computes `nomic-embed-text` embeddings, and stores them in the `my-docs` collection:
 ```bash
 node ingest.js
 ```
 *Output: `Documents ingested successfully!`*
 
-### Step 2: Run the RAG Pipeline
-Query the hybrid retrieval pipeline (searches both ChromaDB and Web in parallel, augments the prompt, and streams the answer):
+### Step 2: Run the Hybrid RAG Pipeline
+Executes hybrid vector + BM25 keyword search, fuses scores with RRF, augments the prompt, and streams the answer:
 ```bash
 npm start
 ```
@@ -133,10 +163,22 @@ node index.js
 
 ---
 
-## 📌 Key Features
+## 📚 Deep-Dive Documentation
 
-- 🧠 **Vector Similarity Search**: Semantic matching on custom local knowledge using `nomic-embed-text` and ChromaDB.
-- 🌐 **Hybrid Retrieval**: Combines local vector documents and live web search with fallback handling.
-- ⚡ **Document Ingestion Pipeline**: Configurable text chunking with metadata tracking.
-- 💭 **Thinking & Stream Separation**: Live streaming supporting reasoning tokens (`<think>` blocks).
-- 🧩 **Clean Modular ES Modules**: Decoupled architecture across embedding, storage, retrieval, augmentation, and generation.
+- 📖 **[`concpets.md`](concpets.md)**: Comprehensive guide covering the mathematical theory and code implementations of:
+  - Cosine Similarity & Vector Norms
+  - Semantic Chunking & Dynamic Breakpoint Detection
+  - TF-IDF vs. BM25 (Term frequency saturation & length normalization)
+  - Reciprocal Rank Fusion (RRF) & score calibration
+- 🧪 **[`Quiz.md`](Quiz.md)**: Detailed answers to core engineering questions (Bi-Encoder vs Cross-Encoder reranking, sparse vs dense search, metadata filtering schemas).
+- 🗺️ **[`RAG_LEARNING_ROADMAP.md`](RAG_LEARNING_ROADMAP.md)**: Full progression roadmap across all phases.
+
+---
+
+## 📌 Key Phase 3 Highlights
+
+- 🧠 **Semantic Chunking**: Context-aware chunk boundaries based on embedding divergence ($\text{threshold} = 0.75$).
+- 🔀 **Hybrid Search (Dense + Sparse)**: Overcomes vocabulary mismatch using both semantic embeddings and BM25 keyword indexing.
+- ⚖️ **Reciprocal Rank Fusion**: Rank-based score normalization avoiding raw score scale distortions.
+- 🌐 **Parallel Web Search Fallback**: Seamless integration of live web sources via `Promise.allSettled`.
+- 💭 **Reasoning & Stream Separation**: Real-time token streaming supporting `<think>` tags and final responses.
